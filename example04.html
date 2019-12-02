@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<meta charset = utf8>
+<html>
+    
+<head>
+    <title>Example with buttons</title>
+</head>    
+
+<body>
+    
+<button id="buttonOn" onClick="on()">On</button>
+<button id="buttonOff" onClick="off()">Off</button>
+
+<br>
+
+<script type="text/javascript">
+
+let ws = new WebSocket("ws://172.16.22.78:8888"); // // create socket - connect to it
+
+function on() { // when button "on" is pressed we
+    ws.send("1"); // send number 1 via websocket
+}
+
+function off() { // when button "off" is pressed we
+    ws.send("0"); // send number 0 via websocket
+}
+    
+</script>
+    
+</body>    
+    
+</html>
