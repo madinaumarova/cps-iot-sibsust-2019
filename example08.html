@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<meta charset = utf8>
+<html>
+   
+<head>
+    <title>Example with HW button</title>
+</head>    
+
+<body>
+   
+<div id="print1"></div>
+
+<script type="text/javascript">
+"use strict"; // in order to use clasess
+
+var divElement = document.getElementById("print1"); // var for div el.
+
+function log(msg) {
+    divElement.innerHTML += "<div>" + msg + "</div>"; // print to div
+}
+
+var ws = new WebSocket('ws://172.16.22.78//');
+
+ws.onmessage = function (event) {
+    log(event.data);
+}
+
+ws.onclose = function (value) {
+    log("Connection closed.");
+}
+
+</script>
+   
+</body>    
+   
+</html>
