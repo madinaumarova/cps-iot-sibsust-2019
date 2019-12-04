@@ -46,21 +46,32 @@ wss.on('connection', function (ws) {
     console.log('ws._socket.address', ws._socket.address());
     console.log('ws._socket.remotePort', ws._socket.remotePort);
 
-    // print of IP adresses, ports, ip family
     wss.broadcast("Remote IP addres -> ws._socket.remoteAddress: " + ws._socket.remoteAddress);
     // ::ffff:192.168.254.1 is ipv6 address
     // in Chrome we enter: http://[::ffff:192.168.254.131]:8080 -> http://[::ffff:c0a8:fe83]:8080
     wss.broadcast("Websocket data -> ws._socket.address(): " + JSON.stringify(ws._socket.address()));
-    wss.broadcast("Websocket data address -> ws._socket.address().address: " + JSON.stringify(ws._socket.address().address));
-    wss.broadcast("Websocket data family -> ws._socket.address().family: " + JSON.stringify(ws._socket.address().family));
-    wss.broadcast("Websocket data port -> ws._socket.address().port: " + JSON.stringify(ws._socket.address().port));
+    wss.broadcast("Websocket data address -> ws._socket.address().address: " +
+    JSON.stringify(ws._socket.address().address));
+    wss.broadcast("Websocket data family -> ws._socket.address().family: " +
+    JSON.stringify(ws._socket.address().family));
+    wss.broadcast("Websocket data port -> ws._socket.address().port: " +
+    JSON.stringify(ws._socket.address().port));
     wss.broadcast("Remote port -> ws._socket.remotePort: " + ws._socket.remotePort);
-    wss.broadcast("Client data ----------------------------->");    
+    wss.broadcast("Client data ----------------------------->");
+    
+    
     
     sendValueViaWebSocket = function(value) {
         ws.send(value);
     }
 
+wss.broadcast = function broadcast(data) {
+  wss.clients.forEach(function each(client) {
+      if (client.readyState === WebSocket.OPEN) {
+    client.send(data);
+      }
+  });
+};
     
 }); // end of wss code
 
@@ -93,5 +104,7 @@ wss.on('connection', function (ws) {
                     
         last_value = value; // this is read from pin 2 many times per s
     }); // end board.digitalRead on pin 2
+    
+    
 
 });  // end of board.on "ready"
