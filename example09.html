@@ -13,7 +13,7 @@
 <script type="text/javascript">
 "use strict"; // in order to use clasess
 
-var numberOfLinesBeforeScroll = 30;
+var numberOfLinesBeforeScroll = 10;
 var linesPrintCounter = 0;
 
 var divElement = document.getElementById("print1"); // var for div el.
@@ -29,7 +29,8 @@ function log(msg) {
     linesPrintCounter++; // increase the counter of printouts
 }
 
-var ws = new WebSocket('ws://192.168.254.149:8888/');
+
+var ws = new WebSocket('ws://172.16.22.78:8888//');
 
 ws.onmessage = function (event) {
     log(event.data);
