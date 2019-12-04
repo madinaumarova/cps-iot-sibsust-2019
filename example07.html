@@ -19,7 +19,7 @@ function log(msg) {
     divElement.innerHTML += "<div>" + msg + "</div>"; // print to div
 }
 
-var ws = new WebSocket('ws://172.16.22.78//');
+var ws = new WebSocket('ws://172.16.22.78:8888//');
 
 ws.onmessage = function (event) {
     log(event.data);
