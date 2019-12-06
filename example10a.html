@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<meta charset = utf8>
+<html>
+
+<head>
+<title>Example with pozi</title>
+</head>
+   
+<body>
+  
+  <div id="print1"></div>    
+ 
+  <br>
+ 
+  <script type="text/javascript">
+  "use strict"; // in order to use clasess
+ 
+  var divElement = document.getElementById("print1"); // var for div el.
+  var numberOfLinesBeforeScroll = 10;
+  var linesPrintCounter = 0;
+ 
+  function log(msg) {
+      var node=document.createElement("tr"); // we create the variable node as the a table row (tr)
+      var textnode=document.createTextNode(linesPrintCounter + " | " + msg); // we create element with the text adding the counter
+      node.appendChild(textnode); // adding text to "node", i.e. table row
+      divElement.insertBefore(node, divElement.childNodes[0]); // inserting into variable node
+      if (linesPrintCounter > numberOfLinesBeforeScroll-1) { // if the lines are more than limit -> start with scroll
+          divElement.removeChild(divElement.childNodes[numberOfLinesBeforeScroll]); // we remove the oldest printout
+      }
+      linesPrintCounter++; // increasing the number of printouts
+  }
+ 
+let ws = new WebSocket("ws://172.16.22.78:8888"); // create socket - connect to it
+var messageJSON;
+
+ws.onmessage = function(event) {
+    var msg = JSON.parse(event.data); // string from ws is put to JSON
+    switch(msg.type) {
+        case "message":
+            log(msg.content); // add msg to div
+        break;
+        case "clientReadValues":
+            log(msg.desiredValue); // add msg with value to div
+        break;        
+    }
+};
+ 
+</script>
+
+</body>
+
+</html>
