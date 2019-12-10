@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<meta charset = utf8>
+<html>
+
+<head>
+<title>Example with potentiometers</title>
+</head>
+   
+<body onload="load()";>
+    
+<div>
+<canvas id="canvas1" width ="200" height = "100" style="border: 1px dashed #00c3c3;"></canvas>
+<br>
+<canvas id="canvas2" width = "200" height = "100" style="border: 1px dashed #00c3c3;"></canvas>
+<p></p>
+</div>
+
+pCoeff: <input id="pCoeff" value="0.1" size="5" />
+<button id="buttonStartControlAlgorithm1" onClick="startControlAlgorithm1();">Start Ctrl Alg1</button>
+<button id="buttonStopControlAlgorithm" onClick="stopControlAlgorithm();">Stop Ctrl Alg</button>
+<p></p>
+Kp: <input id="Kp1" value="0.15" size = "5" />
+Ki: <input id="Ki1" value="0.0055" size = "5" />
+Kd: <input id="Kd1" value="0.25" size = "5" />
+<button id="buttonStartControlAlgorithm2" onClick="startControlAlgorithm2();">Start Ctrl Alg2</button>
+<button id="buttonStopControlAlgorithm" onClick="stopControlAlgorithm();">Stop Ctrl Alg</button>
+
+<div id="divForStaticPrint"> </div>
+<p></p>
+
+  
+<div id="print1"></div>    
+ 
+<br>
+ 
+  <script type="text/javascript">
+  "use strict"; // in order to use clasess
+ 
+var divElement = document.getElementById("print1"); // var for div el.
+var numberOfLinesBeforeScroll = 10;
+var linesPrintCounter = 0;
+ 
+var potValue1 = 0; // value of the first potentiometer
+var x1 = new Array(); // array for x1
+var y1 = new Array(); // array for y1
+var potValue2 = 0; // value of second potentiometer
+var x2 = new Array(); // array for x2 variable
+var y2 = new Array(); // array for y2 variable
+var pwm = 0;
+
+
+var canvas1;
+var ctx1;
+
+// variable for the second graph on canvas2
+var x3 = new Array(); // array for x3 variable
+var y3 = new Array(); // array for y3 variable
+var canvas2;
+var ctx2;
+
+var pCoeff = 0;
+var Kp1 = 0;
+var Ki1 = 0;
+var Kd1 = 0;
+ 
+function log(msg) {
+  var node=document.createElement("tr"); // we create the variable node as the a table row (tr)
+  var textnode=document.createTextNode(linesPrintCounter + " | " + msg); // we create element with the text adding the counter
+  node.appendChild(textnode); // adding text to "node", i.e. table row
+  divElement.insertBefore(node, divElement.childNodes[0]); // inserting into variable node
+  if (linesPrintCounter > numberOfLinesBeforeScroll-1) { // if the lines are more than limit -> start with scroll
+      divElement.removeChild(divElement.childNodes[numberOfLinesBeforeScroll]); // we remove the oldest printout
+  }
+  linesPrintCounter++; // increasing the number of printouts
+}
+ 
+let ws = new WebSocket("ws://172.16.22.78:8888"); // create socket - connect to it
+var messageJSON;
+
+function load() { // function that is started, when we open the page
+    canvas1 = document.getElementById("canvas1");
+    ctx1 = canvas1.getContext("2d");
+
+    // initialization of graph with points
+    ctx1.lineWidth = "1";
+    ctx1.strokeStyle = "#ff0000";
+    
+    // initialization for canvas2
+    canvas2 = document.getElementById("canvas2");
+    ctx2 = canvas2.getContext("2d");
+    
+    // initializaction of first time series
+    for (var i=0; i<200; i++) {
+        x1[i] = i; // for x values are 0, 1, 2, ...
+        y1[i] = 0; // for y values are 0
+    };
+    
+    // initializaion of second graph
+    for (var i=0; i<200; i++) {
+        x2[i] = i; // x2 values are 0, 1, 2, ...
+        y2[i] = 0; // for y2 values are 0
+    };
+    
+    // initialize third graph arrays    
+    for (var i=0; i<200; i++) {
+        x3[i] = i; // for x values are 0, 1, 2, ...
+        y3[i] = 0; // for y values are 0
+    };
+};
+
+ws.onmessage = function(event) {
+    var msg = JSON.parse(event.data); // string from ws is put to JSON
+    switch(msg.type) {
+        case "message":
+            log(msg.content); // add msg to div
+        break;
+        case "staticMsgToClient":
+            document.getElementById("divForStaticPrint").innerHTML = "Status: Ctrl. Alg. " + msg.content; // we print to div
+        break;
+        case "clientReadValues":
+            
+            potValue1 = msg.desiredValue;
+            potValue2 = msg.actualValue;
+            pwm = parseInt((Number(msg.pwm)).toFixed(0), 10);
+    
+            // Draw first graph *****************************************
+            
+            ctx1.clearRect(0, 0, canvas1.width, canvas1.height); // clear the canvas
+            ctx1.lineWidth = "1";
+            
+            // add legend
+            ctx1.font = "11px Arial";
+            ctx1.fillText("Desired",70,10);
+            ctx1.strokeStyle = "#ff0000";
+            ctx1.beginPath(); // beginning of legend line draw
+            ctx1.lineTo(50, 6);
+            ctx1.lineTo(65, 6);
+            ctx1.stroke(); // end of legend line draw
+            
+            ctx1.font = "11px Arial";
+            ctx1.fillText("Actual",140,10);
+            ctx1.strokeStyle = "#00ff00";
+            ctx1.beginPath(); // beginning of legend line draw
+            ctx1.lineTo(120, 6);
+            ctx1.lineTo(135, 6);
+            ctx1.stroke(); // end of legend line draw
+            
+            // END of add legend
+            
+            // add axis labels
+            ctx1.fillText("<-" + 0 + "|" + 200 + "->", 150, 100-5); // display no. of points on x-axis
+            // min on y-axis label
+            ctx1.fillText(1023,5,11);
+            ctx1.fillText(0,5,100-5);
+            
+            ctx1.strokeStyle = "#ff0000";
+            ctx1.beginPath(); // to start drawing new line
+            y1.splice(0, 1); // on the position 0 in the field y1 we erase one value
+            y1[199] = potValue1; // new value is added at the end
+            for (var i=0; i<200; i++) {
+                ctx1.lineTo(x1[i], (100 - (y1[i] / 1023) * 100)); // 0,0 x,y coordinate is in upper left corner
+            };
+            ctx1.stroke(); // to draw the line
+
+            // End of draw graph 1st ***********************************
+            
+            // Draw second graph **********************************************
+            ctx1.lineWidth = "1";
+            ctx1.strokeStyle = "#00ff00";
+            ctx1.beginPath(); // to start drawing new line
+            y2.splice(0, 1); // on the position 0 in the field y2 we erase one value
+            y2[199] = potValue2; // new value is added at the end
+            for (i=0; i<200; i++) {
+                ctx1.lineTo(x2[i], (100 - (y2[i] / 1023) * 100)); // 0,0 x,y coordinate is in upper left corner
+            };
+            ctx1.stroke(); // to draw the line
+            // Draw second graph graph END ************************************
+            
+            // Draw graph No3 on canvas2 *****************************************
+            ctx2.lineWidth = "1";
+            ctx2.clearRect(0, 0, canvas2.width, canvas2.height); // clear the canvas
+            
+            // draw centerline at 0
+            ctx2.strokeStyle = "#add8e6";
+            ctx2.beginPath(); // draw centerline at 0
+            ctx2.lineTo(0, 50); // starting point
+            ctx2.lineTo(200, 50); // ending point
+            ctx2.stroke();
+            
+            // add legend to graph
+            ctx2.font = "11px Arial";
+            ctx2.fillText("PWM", 70, 10);
+            ctx2.strokeStyle = "#0000ff";
+            ctx2.beginPath(); // beginning of the short line for the legend
+            ctx2.lineTo(50, 6);
+            ctx2.lineTo(65, 6);
+            ctx2.stroke();
+            
+            ctx2.strokeStyle = "#0000ff";    
+            ctx2.beginPath(); // to start drawing new line
+            y3.splice(0, 1); // on the position 0 in the field y we erase one value
+            y3[199] = pwm; // new value is added at the end
+            for (var i=0; i<200; i++) {
+                ctx2.lineTo(x3[i], (100 - (255 + y3[i]) / 510 * 100)); // 0,0 x,y coordinate is in upper left corner
+            };
+            ctx2.stroke(); // to draw the line
+            
+            // add axis labels
+            ctx2.fillText("<-" + 0 + "|" + 200 + "->", 150, 100-5); // display no. of points on x-axis
+            // min on y-axis label
+            ctx2.fillText(255,5,11);
+            ctx2.fillText(-255,5,100-5);
+            
+            // End of draw No3 on canvas2 ***********************************
+            
+            
+            
+            
+            log(potValue1 + "|" + potValue2 + "|" + msg.error + "|" + msg.pwm);
+        break;        
+    }
+};
+
+function startControlAlgorithm1() {
+    stopControlAlgorithm(); // just in case, if it is not started
+    pCoeff = document.getElementById("pCoeff").value; // read the value of coeff from input field
+    messageJSON = {"type": "startControlAlgorithm", "ctrlAlgNo": 1, "pCoeff": pCoeff};
+    ws.send(JSON.stringify(messageJSON)); // we have to stringify JSON to send it over websocket
+}
+
+function startControlAlgorithm2() {
+    stopControlAlgorithm(); // just in case, if it is not started
+    Kp1 = document.getElementById("Kp1").value; // read the value of coeff from input field
+    Ki1 = document.getElementById("Ki1").value; // read the value of coeff from input field
+    Kd1 = document.getElementById("Kd1").value; // read the value of coeff from input field
+    messageJSON = {"type": "startControlAlgorithm", "ctrlAlgNo": 2, "Kp1": Kp1, "Ki1": Ki1, "Kd1": Kd1};
+    ws.send(JSON.stringify(messageJSON)); // we have to stringify JSON to send it over websocket    
+}
+
+
+function stopControlAlgorithm () {
+    messageJSON = {"type": "stopControlAlgorithm"};
+    ws.send(JSON.stringify(messageJSON)); // we have to stringify JSON to send it over websocket    
+}
+ 
+</script>
+
+</body>
+
+</html>
