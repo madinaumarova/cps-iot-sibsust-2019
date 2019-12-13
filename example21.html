@@ -250,11 +250,11 @@ function sendPosition () {
     function pulse() {
     var positionInterval = 0;
     intervalPulseFunction = setInterval(function() {
-    if (positionInterval == 220) {
+    if (positionInterval == 320) {
         positionInterval = 804;
     }
     else {
-        positionInterval = 220;
+        positionInterval = 320;
     }
     messageJSON = {"type": "sendPosition", "positionValue": positionInterval};
     ws.send(JSON.stringify(messageJSON)); // we have to stringify JSON to send it over websocket 
